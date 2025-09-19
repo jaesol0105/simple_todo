@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -34,7 +35,11 @@ class _HomePageState extends State<HomePage> {
     final firestore = FirebaseFirestore.instance;
     final colRef = firestore.collection('todos');
 
-    final query = colRef.orderBy('createdAt', descending: true);
+    var query = colRef.orderBy('createdAt', descending: true);
+    query = query.where(
+      'uid',
+      isEqualTo: FirebaseAuth.instance.currentUser?.uid,
+    );
     final querySnapshot = await query.get();
     final documents = querySnapshot.docs;
 
@@ -64,6 +69,7 @@ class _HomePageState extends State<HomePage> {
         'isDone': false,
         'createdAt': DateTime.now().toIso8601String(),
         'dueAt': null, // 생성시 미설정 null
+        'uid': FirebaseAuth.instance.currentUser?.uid,
       });
       loadTodos();
       textController.clear();
@@ -241,6 +247,49 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
               const SizedBox(height: 12),
+
+              ElevatedButton(
+                onPressed: () async {
+                  await localNoti.cancelAll();
+
+                  // 2) 10초 뒤로 스케줄
+                  final when = tz.TZDateTime.now(
+                    tz.local,
+                  ).add(const Duration(seconds: 10));
+                  await localNoti.zonedSchedule(
+                    7777,
+                    '60초 뒤',
+                    'inexact 테스트',
+                    when,
+                    const NotificationDetails(
+                      android: AndroidNotificationDetails(
+                        'todo_channel',
+                        'ToDo 알림',
+                        channelDescription: '테스트',
+                        importance: Importance.max,
+                        priority: Priority.high,
+                        icon: '@mipmap/ic_launcher',
+                      ),
+                    ),
+                    androidScheduleMode:
+                        AndroidScheduleMode.inexactAllowWhileIdle, // ✅ 이걸로 대체
+                    // matchDateTimeComponents: 생략 (일회성은 쓰지 않음)
+                  );
+
+                  // 3) 등록 확인
+                  final pending = await localNoti.pendingNotificationRequests();
+                  debugPrint(
+                    'PENDING=${pending.length} -> ${pending.map((e) => e.id).toList()}',
+                  );
+
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('10초 뒤 알림 예약됨')),
+                    );
+                  }
+                },
+                child: const Text('10초 뒤 알림 테스트'),
+              ),
             ],
           ),
         ),

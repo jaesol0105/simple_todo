@@ -43,3 +43,50 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Flutter/Build
+.buildlog/
+.dart_tool/
+.packages
+.pub-cache/
+flutter_*.png
+/build/
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Android
+android/local.properties
+**/*.keystore
+**/*.jks
+android/key.properties
+.gradle/
+
+# iOS/macOS
+**/*.p8
+**/*.p12
+**/*.pem
+**/*.mobileprovision
+Pods/
+.flutter-plugins
+.flutter-plugins-dependencies
+
+# Firebase (공개레포면 비공개 권장)
+android/app/google-services.json
+ios/Runner/GoogleService-Info.plist
+lib/firebase_options.dart
+
+# Env/Secrets
+.env
+.env.*
+*.secret.*
+*.credentials
+
+# Flutter misc
+.metadata

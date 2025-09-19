@@ -1,4 +1,6 @@
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_todo/login_page.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 import 'noti.dart';
@@ -6,6 +8,26 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_todo/firebase_options.dart';
 import 'package:flutter_todo/home_page.dart';
+
+Future<void> requestNotificationPermissions() async {
+  final PermissionStatus status = await Permission.notification.request();
+  if (status.isGranted) {
+    // Notification permissions granted
+  } else if (status.isDenied) {
+    // Notification permissions denied
+    //await openAppSettings();
+  } else if (status.isPermanentlyDenied) {
+    // Notification permissions permanently denied, open app settings
+    await openAppSettings();
+  }
+}
+
+void _permissionWithNotification() async {
+  if (await Permission.notification.isDenied &&
+      !await Permission.notification.isPermanentlyDenied) {
+    await [Permission.notification].request();
+  }
+}
 
 void main() async {
   // 비동기 처리를 안전하게 할 수 있도록 준비하는 코드
@@ -17,6 +39,7 @@ void main() async {
   tz.initializeTimeZones();
   tz.setLocalLocation(tz.getLocation('Asia/Seoul'));
   await initLocalNoti();
+
   runApp(MyApp());
 }
 
@@ -34,7 +57,7 @@ class MyApp extends StatelessWidget {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      home: HomePage(),
+      home: LoginPage(),
     );
   }
 }

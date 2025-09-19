@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
 
@@ -10,23 +11,26 @@ Future<void> initLocalNoti() async {
   await localNoti.initialize(settings);
 
   // Android 13+ 알림 권한 요청
-  await localNoti
+  final android = localNoti
       .resolvePlatformSpecificImplementation<
         AndroidFlutterLocalNotificationsPlugin
       >();
+
+  final granted = await android?.requestNotificationsPermission() ?? false;
+  debugPrint('POST_NOTIFICATIONS granted: $granted');
 
   // 채널 생성(안드로이드)
   const androidChannel = AndroidNotificationChannel(
     'todo_channel',
     'ToDo 알림',
     description: '마감 알림 채널',
-    importance: Importance.high,
+    importance: Importance.max,
   );
-  await localNoti
-      .resolvePlatformSpecificImplementation<
-        AndroidFlutterLocalNotificationsPlugin
-      >()
-      ?.createNotificationChannel(androidChannel);
+  await android?.createNotificationChannel(androidChannel);
+
+  // 앱/채널이 OS에서 차단됐는지 점검
+  final enabled = await android?.areNotificationsEnabled();
+  debugPrint('areNotificationsEnabled: $enabled');
 }
 
 /// [푸쉬 알림 보내기]
